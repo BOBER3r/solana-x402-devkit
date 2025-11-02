@@ -23,8 +23,6 @@ npm install @x402-solana/client @solana/web3.js
 npm install @x402-solana/server @x402-solana/client @solana/web3.js
 ```
 
-> **Note**: Currently published to GitHub Packages. Full npm registry publication coming soon for hackathon demo.
-
 ---
 
 ## 🚀 Quick Start
@@ -87,12 +85,11 @@ const data = await response.json();
 
 ## 📦 Packages
 
-| Package | Description | Size |
-|---------|-------------|------|
-| **[@x402-solana/core](./packages/core)** | Core payment verification and x402 protocol | 96 tests |
-| **[@x402-solana/server](./packages/server)** | Express, NestJS, Fastify middleware | 5+ tests |
-| **[@x402-solana/client](./packages/client)** | Auto-payment fetch wrapper | 20+ tests |
-| **[@x402-solana/mcp](./packages/mcp)** | Model Context Protocol integration | Coming soon |
+| Package | Description | Status |
+|---------|-------------|--------|
+| **[@x402-solana/core](https://www.npmjs.com/package/@x402-solana/core)** | Core payment verification and x402 protocol | ✅ Published (96 tests) |
+| **[@x402-solana/server](https://www.npmjs.com/package/@x402-solana/server)** | Express, NestJS, Fastify middleware | ✅ Published |
+| **[@x402-solana/client](https://www.npmjs.com/package/@x402-solana/client)** | Auto-payment fetch wrapper | ✅ Published |
 
 ---
 
@@ -219,11 +216,9 @@ npm install @x402-solana/core
 
 ## 📖 Documentation
 
-- [Getting Started](./docs/GETTING_STARTED.md)
-- [API Reference](./docs/API_REFERENCE.md)
-- [Architecture](./docs/ARCHITECTURE.md)
-- [Security](./docs/SECURITY.md)
-- [Examples Guide](./examples/EXAMPLES_OVERVIEW.md)
+- **[Getting Started Guide](./GETTING_STARTED.md)** - Complete setup and integration guide
+- **[Examples Overview](./examples/EXAMPLES_OVERVIEW.md)** - Walkthrough of all examples
+- **[Package Documentation](./packages/)** - API reference for each package
 
 ---
 
@@ -235,8 +230,6 @@ npm install @x402-solana/core
 - ✅ **Recipient validation** (checks USDC token account)
 - ✅ **Timing validation** (rejects old transactions)
 - ✅ **Mint verification** (ensures payment is USDC)
-
-See [SECURITY.md](./docs/SECURITY.md) for details.
 
 ---
 
@@ -326,6 +319,12 @@ MIT License - see [LICENSE](./LICENSE) for details.
 
 ---
 
+## 🤖 MCP Integration
+
+Looking to use this toolkit with Model Context Protocol? Check out our [betting-analytics-mcp](https://github.com/yourusername/betting-analytics-mcp) server that demonstrates MCP + x402 integration.
+
+---
+
 ## 🙏 Acknowledgments
 
 Built for the x402 Protocol Hackathon. Powered by:
@@ -337,10 +336,11 @@ Built for the x402 Protocol Hackathon. Powered by:
 
 ## 🔗 Links
 
-- [Documentation](./docs/)
+- [npm: @x402-solana/core](https://www.npmjs.com/package/@x402-solana/core)
+- [npm: @x402-solana/server](https://www.npmjs.com/package/@x402-solana/server)
+- [npm: @x402-solana/client](https://www.npmjs.com/package/@x402-solana/client)
+- [Getting Started Guide](./GETTING_STARTED.md)
 - [Examples](./examples/)
-- [npm Registry](https://www.npmjs.com/package/@x402-solana/core)
-- [Issue Tracker](https://github.com/yourusername/x402-solana-toolkit/issues)
 
 ---
 
@@ -348,4 +348,4 @@ Built for the x402 Protocol Hackathon. Powered by:
 
 If this toolkit helped you, please consider giving us a star ⭐
 
-**Ready to add micropayments to your Solana API?** [Get started now →](./docs/GETTING_STARTED.md)
+**Ready to add micropayments to your Solana API?** [Get started now →](./GETTING_STARTED.md)
