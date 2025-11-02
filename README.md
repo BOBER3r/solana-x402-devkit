@@ -321,7 +321,7 @@ MIT License - see [LICENSE](./LICENSE) for details.
 
 ## 🤖 MCP Integration
 
-Looking to use this toolkit with Model Context Protocol? Check out our [betting-analytics-mcp](https://github.com/yourusername/betting-analytics-mcp) server that demonstrates MCP + x402 integration.
+Looking to use this toolkit with Model Context Protocol? Check out our [betting-analytics-mcp](https://github.com/BOBER3r/betting-analytics-mcp) server that demonstrates MCP + x402 integration.
 
 ---
 
