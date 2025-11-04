@@ -3,20 +3,20 @@
  * Implements payment-required responses using Fastify hooks and decorators
  */
 
-import { FastifyInstance, FastifyRequest, FastifyReply, FastifyPluginCallback } from 'fastify';
+import {FastifyInstance, FastifyPluginCallback, FastifyReply, FastifyRequest} from 'fastify';
 import fp from 'fastify-plugin';
 import {
-  TransactionVerifier,
-  PaymentRequirementsGenerator,
-  VerifierConfig,
-  GeneratorConfig,
-  microUSDCToUSD,
+  createErrorResponse,
   encodePaymentReceipt,
   generatePaymentReceipt,
-  createErrorResponse,
+  GeneratorConfig,
+  microUSDCToUSD,
   parseX402Payment,
+  PaymentRequirementsGenerator,
+  TransactionVerifier,
+  VerifierConfig,
 } from '@x402-solana/core';
-import { X402Config, MiddlewareOptions, PaymentInfo } from '../types';
+import {MiddlewareOptions, PaymentInfo, X402Config} from '../types';
 
 /**
  * Fastify x402 plugin options
@@ -183,15 +183,13 @@ const x402Plugin: FastifyPluginCallback<X402FastifyOptions> = async (
       }
 
       // 4. Attach payment info to request
-      const paymentInfo: PaymentInfo = {
+      (request as any).payment = {
         signature: result.signature!,
         amountUSD: microUSDCToUSD(result.transfer!.amount),
         payer: result.transfer!.authority,
         blockTime: result.blockTime,
         slot: result.slot,
       };
-
-      (request as any).payment = paymentInfo;
 
       // 5. Generate and attach receipt header
       const receipt = generatePaymentReceipt(result, network, {
