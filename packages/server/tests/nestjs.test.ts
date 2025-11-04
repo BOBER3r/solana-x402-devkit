@@ -81,7 +81,7 @@ describe('NestJS Guard', () => {
     };
 
     (TransactionVerifier as jest.Mock).mockImplementation(() => mockVerifier);
-    (PaymentRequirementsGenerator as jest.Mock).mockImplementation(() => mockGenerator);
+    (PaymentRequirementsGenerator as unknown as jest.Mock).mockImplementation(() => mockGenerator);
 
     // Create reflector
     reflector = new Reflector();

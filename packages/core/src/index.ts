@@ -104,6 +104,13 @@ export {
 } from './generator';
 
 // ============================================================================
+// Facilitator Components (x402 Protocol)
+// ============================================================================
+
+export { X402Facilitator, createFacilitator } from './facilitator';
+export type { FacilitatorConfig } from './facilitator';
+
+// ============================================================================
 // Utility Functions
 // ============================================================================
 
@@ -148,6 +155,24 @@ export {
   TRANSACTION_FETCH_RETRY_CONFIG,
   TRANSACTION_CONFIRM_RETRY_CONFIG,
 } from './utils';
+
+// ============================================================================
+// x402 Protocol Utilities
+// ============================================================================
+
+export {
+  parseX402Payment,
+  encodeX402Payment,
+  parseAndValidateSolanaPayment,
+  isValidSolanaNetwork,
+  validateSolanaPayload,
+  extractSignature,
+  createSolanaPaymentHeader,
+  createSolanaPaymentHeaderWithTransaction,
+  X402ParseError,
+} from './utils/x402-parser';
+
+export type { ParseResult } from './utils/x402-parser';
 
 // ============================================================================
 // Version

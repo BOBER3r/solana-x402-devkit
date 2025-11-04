@@ -12,8 +12,8 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { TransactionVerifier, PaymentRequirementsGenerator } from '@x402-solana/core';
-import { X402Payment, PaymentReceipt } from '@x402-solana/core';
+import { TransactionVerifier, PaymentRequirementsGenerator, parseX402Payment } from '@x402-solana/core';
+import { PaymentReceipt } from '@x402-solana/core';
 import { SolanaNetwork } from '../config/network-config';
 
 /**
@@ -191,7 +191,7 @@ export class X402Guard implements CanActivate {
         });
       }
 
-      if (!paymentHeader) {
+      if (!paymentHeader || typeof paymentHeader !== 'string') {
         // No payment - send 402
         if (this.config.debug) {
           console.log('[x402] No payment header, returning 402');
@@ -200,22 +200,43 @@ export class X402Guard implements CanActivate {
         return false;
       }
 
-      // Decode payment
-      const payment = this.decodePaymentHeader(paymentHeader);
+      // Parse X-PAYMENT header using official x402 parser
+      const parseResult = parseX402Payment(paymentHeader);
+
+      if (!parseResult.success) {
+        // Invalid header format - return 402 with error
+        if (this.config.debug) {
+          console.log('[x402] Invalid X-PAYMENT header:', parseResult.error);
+        }
+        this.send402(response, price, options, parseResult.error || 'Invalid payment header');
+        return false;
+      }
+
+      const payment = parseResult.payment!;
 
       if (this.config.debug) {
-        console.log('[x402] Decoded payment:', {
-          signature: payment.payload.signature,
+        console.log('[x402] Parsed payment:', {
+          scheme: payment.scheme,
           network: payment.network,
+          hasSignature: !!payment.payload.signature,
+          hasSerializedTx: !!payment.payload.serializedTransaction,
         });
       }
 
-      // Verify payment
+      // Generate payment requirements for verification
+      const paymentRequirements = this.generator.generate(price, {
+        resource: options?.resource,
+        description: options?.description,
+        timeoutSeconds: options?.timeoutSeconds,
+      });
+
+      const paymentAccept = paymentRequirements.accepts[0];
+
+      // Verify payment using x402-compliant method
       const maxAge = options?.maxPaymentAgeMs || this.config.maxPaymentAgeMs || 300_000;
-      const result = await this.verifier.verifyPayment(
-        payment.payload.signature,
-        this.generator.getRecipientUSDCAccount(),
-        price,
+      const result = await this.verifier.verifyX402Payment(
+        paymentHeader,
+        paymentAccept,
         {
           maxAgeMs: maxAge,
           commitment: 'confirmed',
@@ -293,18 +314,6 @@ export class X402Guard implements CanActivate {
     });
 
     response.status(402).json(requirements);
-  }
-
-  /**
-   * Decode X-PAYMENT header
-   */
-  private decodePaymentHeader(header: string): X402Payment {
-    try {
-      const decoded = Buffer.from(header, 'base64').toString('utf-8');
-      return JSON.parse(decoded);
-    } catch (error) {
-      throw new Error('Invalid X-PAYMENT header format');
-    }
   }
 
   /**

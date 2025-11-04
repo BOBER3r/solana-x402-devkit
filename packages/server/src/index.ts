@@ -111,6 +111,29 @@ export {
 } from './middleware/fastify';
 
 // ============================================================================
+// x402 Facilitator (Official Protocol Endpoints)
+// ============================================================================
+
+export {
+  createFacilitatorRoutes,
+  X402FacilitatorMiddleware,
+  createFacilitatorMiddleware,
+} from './facilitator';
+
+// Re-export facilitator types from core
+export type {
+  VerifyRequest,
+  VerifyResponse,
+  SettleRequest,
+  SettleResponse,
+  SupportedResponse,
+  SupportedPair,
+} from '@x402-solana/core';
+
+export { X402Facilitator } from '@x402-solana/core';
+export type { FacilitatorConfig } from '@x402-solana/core';
+
+// ============================================================================
 // Utilities
 // ============================================================================
 
@@ -128,7 +151,6 @@ export {
 export type {
   PaymentRequirements,
   PaymentAccept,
-  PaymentDestination,
   X402Payment,
   PaymentPayload,
   PaymentReceipt,

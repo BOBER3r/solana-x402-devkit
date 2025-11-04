@@ -4,10 +4,13 @@ Core payment verification and x402 protocol implementation for Solana.
 
 [![npm version](https://img.shields.io/npm/v/@x402-solana/core.svg)](https://www.npmjs.com/package/@x402-solana/core)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![x402](https://img.shields.io/badge/x402-v1%20Compliant-success)](https://github.com/coinbase/x402)
 
 ## Overview
 
-`@x402-solana/core` provides the foundational building blocks for implementing x402 micropayments on Solana. It handles the complex tasks of verifying USDC transactions on-chain, preventing replay attacks, and generating proper payment requirements.
+`@x402-solana/core` provides the foundational building blocks for implementing **official x402 micropayments** on Solana. It handles the complex tasks of verifying USDC transactions on-chain, preventing replay attacks, and generating x402-compliant payment requirements.
+
+> **🏆 x402 v1 Compliant**: Fully implements the official x402 protocol specification. See [X402_COMPLIANCE.md](../../X402_COMPLIANCE.md) for details.
 
 This is a low-level package typically used by server frameworks. **Most users should use [@x402-solana/server](https://www.npmjs.com/package/@x402-solana/server) or [@x402-solana/client](https://www.npmjs.com/package/@x402-solana/client) instead.**
 
@@ -19,10 +22,13 @@ npm install @x402-solana/core @solana/web3.js
 
 ## Features
 
+- ✅ **x402 v1 Compliant** - Official protocol implementation
 - ✅ **Transaction Verification** - Parse and verify Solana transactions
 - ✅ **USDC Validation** - Validate SPL token transfers on-chain
 - ✅ **Replay Protection** - Prevent payment signature reuse
-- ✅ **Payment Requirements** - Generate x402 protocol payment requests
+- ✅ **Payment Requirements** - Generate x402-compliant 402 responses
+- ✅ **Facilitator Pattern** - `/verify`, `/settle`, `/supported` endpoints
+- ✅ **Flexible Format** - Supports `serializedTransaction` and `signature`
 - ✅ **Network Support** - Works with devnet and mainnet-beta
 - ✅ **Legacy & Versioned** - Supports both transaction formats
 - ✅ **96 Unit Tests** - Comprehensive test coverage

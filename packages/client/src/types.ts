@@ -18,34 +18,41 @@ export interface PaymentRequirements {
 
 /**
  * A specific payment method accepted by the server
+ * Compliant with official x402 specification
  */
 export interface PaymentAccept {
-  /** Payment scheme (e.g., "solana-usdc") */
+  /** Payment scheme - use 'exact' for fixed-amount payments */
   scheme: string;
 
-  /** Network identifier (e.g., "devnet", "mainnet-beta") */
+  /** Network identifier (e.g., 'solana-devnet', 'solana-mainnet') */
   network: string;
 
-  /** Maximum amount in micro-units (e.g., micro-USDC) */
+  /** Maximum amount required in smallest unit (micro-USDC for Solana) */
   maxAmountRequired: string;
 
-  /** Resource identifier this payment grants access to */
+  /** Resource being paid for */
   resource: string;
 
-  /** Human-readable description of the payment */
+  /** Description of what payment is for */
   description: string;
 
-  /** Payment destination details */
-  payTo: {
-    /** Recipient's token account address */
-    address: string;
+  /** MIME type of the resource (e.g., 'application/json') */
+  mimeType: string;
 
-    /** Token mint address (e.g., USDC mint) */
-    asset: string;
-  };
+  /** Optional JSON schema for response output */
+  outputSchema?: object | null;
 
-  /** Payment timeout in seconds */
-  timeout: number;
+  /** Payment destination address (token account for Solana) */
+  payTo: string;
+
+  /** Timeout in seconds for payment to be valid */
+  maxTimeoutSeconds: number;
+
+  /** Asset identifier (e.g., USDC mint address) */
+  asset: string;
+
+  /** Optional additional data (scheme-specific) */
+  extra?: object | null;
 }
 
 /**

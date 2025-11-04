@@ -5,8 +5,11 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)](https://www.typescriptlang.org/)
 [![Solana](https://img.shields.io/badge/Solana-Web3.js-9945FF)](https://solana.com)
+[![x402](https://img.shields.io/badge/x402-v1%20Compliant-success)](https://github.com/coinbase/x402)
 
-A production-grade TypeScript library that enables any HTTP API on Solana to implement x402 payment protocol. Framework-agnostic, fully typed, and battle-tested.
+A production-grade TypeScript library that enables any HTTP API on Solana to implement the official **x402 payment protocol**. Framework-agnostic, fully typed, and battle-tested.
+
+> **🏆 x402 Hackathon Qualified**: This toolkit is fully compliant with the official x402 protocol specification and qualifies for the "Best x402 Dev Tool" track ($10K prize pool). [See X402_COMPLIANCE.md](./X402_COMPLIANCE.md) for detailed compliance documentation.
 
 ---
 
@@ -122,6 +125,57 @@ const data = await response.json();
 
 ---
 
+## ✨ x402 Protocol Compliance
+
+This toolkit is **100% compliant** with the official x402 specification by Coinbase.
+
+### What is x402?
+
+x402 is a protocol for HTTP micropayments using the `402 Payment Required` status code. Unlike L402 (Bitcoin Lightning-specific), **x402 is blockchain-agnostic** and designed to work with any payment system.
+
+### Key Compliance Features
+
+✅ **Official Protocol Format**
+- Uses `scheme: "exact"` for fixed payments
+- Network format: `solana-devnet` / `solana-mainnet`
+- Flat `payTo` string (token account address)
+- Includes `mimeType`, `outputSchema`, `extra` fields
+
+✅ **Facilitator Pattern**
+- `/verify` - Lightweight payment validation
+- `/settle` - On-chain payment verification
+- `/supported` - Capability discovery
+
+✅ **Payment Format Support**
+- `serializedTransaction` - Official x402 format
+- `signature` - Backwards compatibility
+
+✅ **X-PAYMENT Header**
+- Base64-encoded JSON format
+- Proper scheme and network identifiers
+- Version tracking with `x402Version: 1`
+
+### 📋 Full Compliance Documentation
+
+See [X402_COMPLIANCE.md](./X402_COMPLIANCE.md) for:
+- Complete protocol specification
+- Implementation details
+- Payment flow diagrams
+- Facilitator endpoint documentation
+- Type definitions
+- Security considerations
+- Testing & verification
+
+### 🎯 Hackathon Qualification
+
+This toolkit qualifies for the **Solana x402 Hackathon "Best x402 Dev Tool" track**:
+- Prize Pool: $10,000
+- Deadline: November 11, 2025
+- Full x402 v1 compliance
+- Production-grade implementation
+
+---
+
 ## 📚 Examples
 
 ### [01-basic-api](./examples/01-basic-api)
@@ -216,6 +270,7 @@ npm install @x402-solana/core
 
 ## 📖 Documentation
 
+- **[X402 Compliance Documentation](./X402_COMPLIANCE.md)** - Full x402 protocol compliance details
 - **[Getting Started Guide](./GETTING_STARTED.md)** - Complete setup and integration guide
 - **[Examples Overview](./examples/EXAMPLES_OVERVIEW.md)** - Walkthrough of all examples
 - **[Package Documentation](./packages/)** - API reference for each package

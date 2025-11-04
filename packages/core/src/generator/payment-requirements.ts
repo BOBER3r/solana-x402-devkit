@@ -8,11 +8,10 @@ import { getAssociatedTokenAddressSync } from '@solana/spl-token';
 import {
   PaymentRequirements,
   PaymentAccept,
-  PaymentDestination,
 } from '../types/x402.types';
 import { GeneratePaymentOptions, GeneratorConfig } from '../types/payment.types';
 import { usdToMicroUSDC } from '../utils/currency-converter';
-import { getUSDCMint, formatNetworkForX402 } from '../utils/address-validator';
+import { getUSDCMint } from '../utils/address-validator';
 
 /**
  * Payment requirements generator
@@ -95,21 +94,22 @@ export class PaymentRequirementsGenerator {
     // Convert USD to micro-USDC
     const microUSDC = usdToMicroUSDC(priceUSD);
 
-    // Create payment destination
-    const payTo: PaymentDestination = {
-      address: this.recipientUSDCAccount.toString(), // CRITICAL: Token account, not wallet!
-      asset: this.usdcMint.toString(),
-    };
+    // Format network for x402 spec (solana-devnet or solana-mainnet)
+    const network = this.network === 'devnet' ? 'solana-devnet' : 'solana-mainnet';
 
-    // Create payment accept option
+    // Create payment accept option (x402-compliant format)
     const accept: PaymentAccept = {
-      scheme: 'solana-usdc',
-      network: formatNetworkForX402(this.network),
+      scheme: 'exact', // Official x402 scheme for fixed payments
+      network,
       maxAmountRequired: microUSDC.toString(),
       resource: options.resource || '',
       description: options.description || 'Payment required for access',
-      payTo,
-      timeout: options.timeoutSeconds || 300, // Default 5 minutes
+      mimeType: options.mimeType || 'application/json',
+      outputSchema: options.outputSchema || null,
+      payTo: this.recipientUSDCAccount.toString(), // String, not object
+      maxTimeoutSeconds: options.timeoutSeconds || 300, // Default 5 minutes
+      asset: this.usdcMint.toString(), // USDC mint address
+      extra: options.extra || null,
     };
 
     // Create full payment requirements
@@ -144,20 +144,24 @@ export class PaymentRequirementsGenerator {
       throw new Error('At least one payment option is required');
     }
 
+    // Format network for x402 spec
+    const network = this.network === 'devnet' ? 'solana-devnet' : 'solana-mainnet';
+
     const accepts: PaymentAccept[] = options.map(opt => {
       const microUSDC = usdToMicroUSDC(opt.priceUSD);
 
       return {
-        scheme: 'solana-usdc',
-        network: formatNetworkForX402(this.network),
+        scheme: 'exact', // Official x402 scheme
+        network,
         maxAmountRequired: microUSDC.toString(),
         resource: opt.resource || '',
         description: opt.description || 'Payment required for access',
-        payTo: {
-          address: this.recipientUSDCAccount.toString(),
-          asset: this.usdcMint.toString(),
-        },
-        timeout: opt.timeoutSeconds || 300,
+        mimeType: opt.mimeType || 'application/json',
+        outputSchema: opt.outputSchema || null,
+        payTo: this.recipientUSDCAccount.toString(), // String format
+        maxTimeoutSeconds: opt.timeoutSeconds || 300,
+        asset: this.usdcMint.toString(),
+        extra: opt.extra || null,
       };
     });
 

@@ -3,7 +3,13 @@
  * Handles complete payment verification flow
  */
 
-import { Connection, VersionedTransactionResponse } from '@solana/web3.js';
+import {
+  Connection,
+  Transaction,
+  VersionedTransaction,
+  VersionedTransactionResponse,
+} from '@solana/web3.js';
+import bs58 from 'bs58';
 import {
   VerificationResult,
   VerificationOptions,
@@ -25,6 +31,8 @@ import {
   createInvalidHeaderError,
   createVerificationError,
 } from './verification-result';
+import { parseAndValidateSolanaPayment } from '../utils/x402-parser';
+import { X402Payment, PaymentAccept } from '../types/x402.types';
 
 /**
  * Default verification options
@@ -258,6 +266,180 @@ export class TransactionVerifier {
 
     // Return a dummy success result (we only care about valid flag here)
     return { valid: true };
+  }
+
+  /**
+   * Verify payment from X-PAYMENT header (x402 protocol compliant)
+   *
+   * This method handles the official x402 protocol format where payment
+   * data is sent in the X-PAYMENT header as base64-encoded JSON.
+   *
+   * Supports both formats:
+   * 1. serializedTransaction - Official x402 format (preferred)
+   * 2. signature - Backwards compatibility format
+   *
+   * @param paymentHeader - X-PAYMENT header value (base64-encoded JSON)
+   * @param paymentRequirements - Payment requirements that were requested
+   * @param options - Verification options
+   * @returns Verification result
+   *
+   * @example
+   * ```typescript
+   * // Express middleware
+   * const header = req.headers['x-payment'];
+   * const requirements = {
+   *   payTo: 'TokenAccount...',
+   *   maxAmountRequired: '10000',
+   *   asset: 'USDCMint...',
+   *   // ... other fields
+   * };
+   *
+   * const result = await verifier.verifyX402Payment(
+   *   header,
+   *   requirements
+   * );
+   *
+   * if (result.valid) {
+   *   // Payment verified - serve content
+   * } else {
+   *   // Payment invalid - return error
+   * }
+   * ```
+   */
+  async verifyX402Payment(
+    paymentHeader: string | undefined,
+    paymentRequirements: PaymentAccept,
+    options: VerificationOptions = {}
+  ): Promise<VerificationResult> {
+    try {
+      // Parse and validate X-PAYMENT header
+      const expectedNetwork =
+        paymentRequirements.network === 'solana-mainnet'
+          ? 'solana-mainnet'
+          : 'solana-devnet';
+
+      const parseResult = parseAndValidateSolanaPayment(
+        paymentHeader,
+        expectedNetwork
+      );
+
+      if (!parseResult.success) {
+        return createInvalidHeaderError(parseResult.error || 'Invalid payment header');
+      }
+
+      const payment = parseResult.payment!;
+
+      // Extract transaction signature
+      let signature: string | null = null;
+
+      // Try to get signature directly from payload (backwards compatibility)
+      if (payment.payload.signature) {
+        signature = payment.payload.signature;
+      }
+      // Try to deserialize transaction to get signature (official x402 format)
+      else if (payment.payload.serializedTransaction) {
+        signature = await this.extractSignatureFromSerializedTransaction(
+          payment.payload.serializedTransaction
+        );
+
+        if (!signature) {
+          return createInvalidHeaderError(
+            'Could not extract signature from serialized transaction'
+          );
+        }
+      } else {
+        return createInvalidHeaderError(
+          'Payment payload must contain either signature or serializedTransaction'
+        );
+      }
+
+      // Verify the payment using extracted signature
+      return this.verifyPayment(
+        signature,
+        paymentRequirements.payTo,
+        parseFloat(paymentRequirements.maxAmountRequired) / 1_000_000, // Convert micro-USDC to USD
+        options
+      );
+    } catch (error: any) {
+      return createVerificationError(error.message, error);
+    }
+  }
+
+  /**
+   * Extract transaction signature from serialized transaction
+   * Handles both legacy and versioned transactions
+   *
+   * @param serializedTransaction - Base64-encoded serialized transaction
+   * @returns Transaction signature or null if extraction fails
+   */
+  private async extractSignatureFromSerializedTransaction(
+    serializedTransaction: string
+  ): Promise<string | null> {
+    try {
+      // Decode from base64
+      const txBuffer = Buffer.from(serializedTransaction, 'base64');
+
+      // Try to deserialize as versioned transaction first
+      try {
+        const versionedTx = VersionedTransaction.deserialize(txBuffer);
+        // Get first signature (payer signature) and encode as base58
+        const signatureBuffer = versionedTx.signatures[0];
+        return bs58.encode(signatureBuffer);
+      } catch {
+        // Fallback to legacy transaction
+        try {
+          const legacyTx = Transaction.from(txBuffer);
+          // Get first signature and encode as base58
+          const signatureBuffer = legacyTx.signatures[0]?.signature;
+          return signatureBuffer ? bs58.encode(signatureBuffer) : null;
+        } catch {
+          return null;
+        }
+      }
+    } catch (error) {
+      console.error('Error extracting signature from serialized transaction:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Verify payment from X402Payment object
+   * Alternative to verifyX402Payment that accepts parsed payment object
+   *
+   * @param payment - Parsed X402Payment object
+   * @param paymentRequirements - Payment requirements
+   * @param options - Verification options
+   * @returns Verification result
+   */
+  async verifyX402PaymentObject(
+    payment: X402Payment,
+    paymentRequirements: PaymentAccept,
+    options: VerificationOptions = {}
+  ): Promise<VerificationResult> {
+    try {
+      // Extract signature from payment
+      let signature: string | null = payment.payload.signature || null;
+
+      if (!signature && payment.payload.serializedTransaction) {
+        signature = await this.extractSignatureFromSerializedTransaction(
+          payment.payload.serializedTransaction
+        );
+      }
+
+      if (!signature) {
+        return createInvalidHeaderError('Could not extract transaction signature');
+      }
+
+      // Verify the payment
+      return this.verifyPayment(
+        signature,
+        paymentRequirements.payTo,
+        parseFloat(paymentRequirements.maxAmountRequired) / 1_000_000,
+        options
+      );
+    } catch (error: any) {
+      return createVerificationError(error.message, error);
+    }
   }
 
   /**

@@ -14,9 +14,9 @@ import {
   encodePaymentReceipt,
   generatePaymentReceipt,
   createErrorResponse,
+  parseX402Payment,
 } from '@x402-solana/core';
 import { X402Config, MiddlewareOptions, PaymentInfo } from '../types';
-import { decodePaymentHeader } from '../utils';
 
 /**
  * Fastify x402 plugin options
@@ -65,6 +65,7 @@ export interface RoutePaymentOptions extends MiddlewareOptions {
  * );
  * ```
  */
+// eslint-disable-next-line @typescript-eslint/no-misused-promises
 const x402Plugin: FastifyPluginCallback<X402FastifyOptions> = async (
   fastify: FastifyInstance,
   options: X402FastifyOptions
@@ -114,9 +115,9 @@ const x402Plugin: FastifyPluginCallback<X402FastifyOptions> = async (
   ): Promise<boolean> {
     try {
       // 1. Check X-PAYMENT header
-      const paymentHeader = request.headers['x-payment'] as string;
+      const paymentHeader = request.headers['x-payment'];
 
-      if (!paymentHeader) {
+      if (!paymentHeader || typeof paymentHeader !== 'string') {
         // No payment provided - return 402 with requirements
         const requirements = generator.generate(priceUSD, {
           description: opts.description || 'Payment required for access',
@@ -129,27 +130,34 @@ const x402Plugin: FastifyPluginCallback<X402FastifyOptions> = async (
         return false;
       }
 
-      // 2. Decode payment header
-      let payment;
-      try {
-        payment = decodePaymentHeader(paymentHeader);
-      } catch (error: any) {
+      // 2. Parse X-PAYMENT header using official x402 parser
+      const parseResult = parseX402Payment(paymentHeader);
+
+      if (!parseResult.success) {
         // Invalid header format - return 402 with error
         const requirements = generator.generate(priceUSD, {
           description: opts.description || 'Payment required for access',
           resource: opts.resource || request.url,
-          errorMessage: `Invalid payment header: ${error.message}`,
+          errorMessage: parseResult.error || 'Invalid payment header',
         });
 
         reply.status(402).send(requirements);
         return false;
       }
 
-      // 3. Verify payment using TransactionVerifier
-      const result = await verifier.verifyPayment(
-        payment.payload.signature,
-        generator.getRecipientUSDCAccount(),
-        priceUSD,
+      // 3. Generate payment requirements for verification
+      const paymentRequirements = generator.generate(priceUSD, {
+        description: opts.description || 'Payment required for access',
+        resource: opts.resource || request.url,
+        timeoutSeconds: opts.timeoutSeconds,
+      });
+
+      const paymentAccept = paymentRequirements.accepts[0];
+
+      // 4. Verify payment using x402-compliant method
+      const result = await verifier.verifyX402Payment(
+        paymentHeader,
+        paymentAccept,
         {
           maxAgeMs: opts.timeoutSeconds ? opts.timeoutSeconds * 1000 : 300_000,
           skipCacheCheck: opts.skipCacheCheck,

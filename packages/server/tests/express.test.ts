@@ -58,12 +58,12 @@ describe('Express Middleware', () => {
             scheme: 'exact',
             network: 'solana-devnet',
             maxAmountRequired: '1000',
+            resource: '/api/test',
             description: 'Payment required',
-            payTo: {
-              address: 'TokenAccount1111111111111111111111111111111',
-              asset: 'USDC11111111111111111111111111111111111111',
-            },
-            timeout: 300,
+            mimeType: 'application/json',
+            payTo: 'TokenAccount1111111111111111111111111111111',
+            asset: 'USDC11111111111111111111111111111111111111',
+            maxTimeoutSeconds: 300,
           },
         ],
         error: 'Payment Required',
@@ -78,7 +78,7 @@ describe('Express Middleware', () => {
     };
 
     (TransactionVerifier as jest.Mock).mockImplementation(() => mockVerifier);
-    (PaymentRequirementsGenerator as jest.Mock).mockImplementation(() => mockGenerator);
+    (PaymentRequirementsGenerator as unknown as jest.Mock).mockImplementation(() => mockGenerator);
 
     // Create middleware instance
     middleware = new X402Middleware(mockConfig);

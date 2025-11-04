@@ -4,13 +4,20 @@
 
 /**
  * Options for generating payment requirements
+ * Compliant with official x402 protocol specification
  */
 export interface GeneratePaymentOptions {
-  /** Resource being paid for (optional) */
+  /** Resource being paid for (e.g., '/api/endpoint') */
   resource?: string;
 
   /** Description of what payment is for */
   description?: string;
+
+  /** MIME type of the resource (default: 'application/json') */
+  mimeType?: string;
+
+  /** Optional JSON schema for response output */
+  outputSchema?: object | null;
 
   /** Custom error message */
   errorMessage?: string;
@@ -18,7 +25,10 @@ export interface GeneratePaymentOptions {
   /** Payment timeout in seconds (default: 300) */
   timeoutSeconds?: number;
 
-  /** Additional metadata to include */
+  /** Optional additional data (scheme-specific) */
+  extra?: object | null;
+
+  /** Additional metadata to include (deprecated - use extra) */
   metadata?: Record<string, any>;
 }
 

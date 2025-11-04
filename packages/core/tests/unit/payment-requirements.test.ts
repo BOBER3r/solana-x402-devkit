@@ -59,19 +59,21 @@ describe('PaymentRequirementsGenerator', () => {
       expect(accept.maxAmountRequired).toBe('1000');
     });
 
-    it('should include recipient USDC account, not wallet', () => {
+    it('should include recipient USDC account, not wallet (x402 v1 format)', () => {
       const requirements = generator.generate(0.001);
       const accept = requirements.accepts[0];
 
-      expect(accept.payTo.address).toBe(generator.getRecipientUSDCAccount());
-      expect(accept.payTo.address).not.toBe(generator.getRecipientWallet());
+      // x402 v1: payTo is now a flat string
+      expect(accept.payTo).toBe(generator.getRecipientUSDCAccount());
+      expect(accept.payTo).not.toBe(generator.getRecipientWallet());
     });
 
-    it('should include USDC mint address', () => {
+    it('should include USDC mint address (x402 v1 format)', () => {
       const requirements = generator.generate(0.001);
       const accept = requirements.accepts[0];
 
-      expect(accept.payTo.asset).toBe('Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr'); // Devnet USDC
+      // x402 v1: asset is now at top level
+      expect(accept.asset).toBe('Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr'); // Devnet USDC
     });
 
     it('should include correct network', () => {
@@ -81,20 +83,22 @@ describe('PaymentRequirementsGenerator', () => {
       expect(accept.network).toBe('solana-devnet');
     });
 
-    it('should use default timeout', () => {
+    it('should use default timeout (x402 v1 format)', () => {
       const requirements = generator.generate(0.001);
       const accept = requirements.accepts[0];
 
-      expect(accept.timeout).toBe(300);
+      // x402 v1: timeout is now maxTimeoutSeconds
+      expect(accept.maxTimeoutSeconds).toBe(300);
     });
 
-    it('should use custom timeout', () => {
+    it('should use custom timeout (x402 v1 format)', () => {
       const requirements = generator.generate(0.001, {
         timeoutSeconds: 600,
       });
       const accept = requirements.accepts[0];
 
-      expect(accept.timeout).toBe(600);
+      // x402 v1: timeout is now maxTimeoutSeconds
+      expect(accept.maxTimeoutSeconds).toBe(600);
     });
 
     it('should include custom description', () => {
@@ -166,7 +170,7 @@ describe('PaymentRequirementsGenerator', () => {
   });
 
   describe('Mainnet generator', () => {
-    it('should use mainnet USDC mint', () => {
+    it('should use mainnet USDC mint (x402 v1 format)', () => {
       const mainnetGenerator = new PaymentRequirementsGenerator({
         recipientWallet: recipientKeypair.publicKey.toString(),
         network: 'mainnet-beta',
@@ -175,8 +179,9 @@ describe('PaymentRequirementsGenerator', () => {
       const requirements = mainnetGenerator.generate(0.001);
       const accept = requirements.accepts[0];
 
-      expect(accept.payTo.asset).toBe('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'); // Mainnet USDC
-      expect(accept.network).toBe('solana-mainnet-beta');
+      // x402 v1: asset is now at top level
+      expect(accept.asset).toBe('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v'); // Mainnet USDC
+      expect(accept.network).toBe('solana-mainnet');
     });
   });
 

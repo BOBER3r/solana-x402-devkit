@@ -4,10 +4,13 @@ Client SDK for automatic x402 payment handling on Solana.
 
 [![npm version](https://img.shields.io/npm/v/@x402-solana/client.svg)](https://www.npmjs.com/package/@x402-solana/client)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![x402](https://img.shields.io/badge/x402-v1%20Compliant-success)](https://github.com/coinbase/x402)
 
 ## Overview
 
-`@x402-solana/client` provides a drop-in replacement for native `fetch()` that automatically handles x402 micropayments on Solana. When your code requests a paid API endpoint, this client:
+`@x402-solana/client` provides a drop-in replacement for native `fetch()` that automatically handles **official x402 micropayments** on Solana. When your code requests a paid API endpoint, this client:
+
+> **🏆 x402 v1 Compliant**: Automatically sends x402-compliant payment headers and handles 402 responses. See [X402_COMPLIANCE.md](../../X402_COMPLIANCE.md) for details.
 
 1. ✅ **Detects 402 Payment Required** responses
 2. ✅ **Creates USDC payment** on Solana automatically
@@ -124,6 +127,23 @@ const response = await x402Client.fetch('https://api.example.com/premium');
 
 ### v0.1.0 (2025-01-02)
 - Initial release
+
+## Testing
+
+**Test Coverage: 31/31 tests passing (100%)**
+
+The test suite validates:
+- ✅ Client initialization (bs58 & Uint8Array wallet formats)
+- ✅ HTTP fetch operations (200 OK, 404 errors)
+- ✅ Balance queries (USDC and SOL)
+- ✅ USDC mint validation (devnet/mainnet)
+- ✅ Network error handling & retry logic
+
+```bash
+npm test
+```
+
+**Production Validation:** Real payment flow examples using Solana devnet are available in `examples/` directory.
 
 ## Related Packages
 

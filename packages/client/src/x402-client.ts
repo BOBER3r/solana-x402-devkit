@@ -213,8 +213,8 @@ export class X402Client {
   private async createPayment(paymentReq: PaymentRequirements): Promise<string> {
     const requirement = paymentReq.accepts[0];
     const amountMicroUSDC = parseInt(requirement.maxAmountRequired);
-    const recipientTokenAccount = new PublicKey(requirement.payTo.address);
-    const usdcMint = new PublicKey(requirement.payTo.asset);
+    const recipientTokenAccount = new PublicKey(requirement.payTo);
+    const usdcMint = new PublicKey(requirement.asset);
 
     try {
       // Get sender's USDC token account
@@ -361,16 +361,16 @@ export class X402Client {
 
     const requirement = paymentReq.accepts[0];
 
-    // Check if we support this payment method
-    if (requirement.scheme !== 'solana-usdc') {
+    // Check if we support this payment method (x402-compliant 'exact' scheme)
+    if (requirement.scheme !== 'exact') {
       throw new PaymentError(
-        `Unsupported payment scheme: ${requirement.scheme}`,
+        `Unsupported payment scheme: ${requirement.scheme} (expected 'exact')`,
         PaymentErrorCode.UNSUPPORTED_PAYMENT_METHOD,
         { scheme: requirement.scheme }
       );
     }
 
-    // Check if network matches (normalize both to x402 format for comparison)
+    // Check if network matches (x402 format uses 'solana-devnet' or 'solana-mainnet')
     const clientNetwork = `solana-${this.network}`;
     if (requirement.network !== clientNetwork) {
       throw new PaymentError(
@@ -382,11 +382,11 @@ export class X402Client {
 
     // Validate USDC mint address
     const expectedMint = X402Client.USDC_MINTS[this.network];
-    if (requirement.payTo.asset !== expectedMint) {
+    if (requirement.asset !== expectedMint) {
       throw new PaymentError(
-        `Invalid USDC mint: expected ${expectedMint}, got ${requirement.payTo.asset}`,
+        `Invalid USDC mint: expected ${expectedMint}, got ${requirement.asset}`,
         PaymentErrorCode.INVALID_PAYMENT_REQUIREMENTS,
-        { expected: expectedMint, received: requirement.payTo.asset }
+        { expected: expectedMint, received: requirement.asset }
       );
     }
   }

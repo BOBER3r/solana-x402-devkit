@@ -1,11 +1,14 @@
 /**
  * Core x402 protocol types
- * Based on x402 specification for payment-required responses
+ * Based on official x402 specification from Coinbase
+ * Reference: https://github.com/coinbase/x402
  */
 
 /**
  * Payment requirements returned in 402 responses
  * Tells clients how to pay for access to a resource
+ *
+ * Official x402 protocol format - DO NOT modify without updating spec compliance
  */
 export interface PaymentRequirements {
   /** x402 protocol version (currently 1) */
@@ -20,9 +23,10 @@ export interface PaymentRequirements {
 
 /**
  * A single acceptable payment method
+ * Compliant with official x402 specification
  */
 export interface PaymentAccept {
-  /** Payment scheme (e.g., 'exact', 'streaming') */
+  /** Payment scheme - use 'exact' for fixed-amount payments */
   scheme: string;
 
   /** Network identifier (e.g., 'solana-devnet', 'solana-mainnet') */
@@ -31,56 +35,69 @@ export interface PaymentAccept {
   /** Maximum amount required in smallest unit (micro-USDC for Solana) */
   maxAmountRequired: string;
 
-  /** Resource being paid for (optional) */
-  resource?: string;
+  /** Resource being paid for */
+  resource: string;
 
   /** Description of what payment is for */
   description: string;
 
-  /** Payment destination details */
-  payTo: PaymentDestination;
+  /** MIME type of the resource (e.g., 'application/json') */
+  mimeType: string;
+
+  /** Optional JSON schema for response output */
+  outputSchema?: object | null;
+
+  /** Payment destination address (token account for Solana) */
+  payTo: string;
 
   /** Timeout in seconds for payment to be valid */
-  timeout: number;
-}
-
-/**
- * Payment destination information
- */
-export interface PaymentDestination {
-  /** Recipient address (MUST be token account for Solana, not wallet) */
-  address: string;
+  maxTimeoutSeconds: number;
 
   /** Asset identifier (e.g., USDC mint address) */
   asset: string;
+
+  /** Optional additional data (scheme-specific) */
+  extra?: object | null;
 }
 
 /**
  * Payment proof sent by client in X-PAYMENT header
+ * Sent as base64-encoded JSON
+ *
+ * Official x402 format
  */
 export interface X402Payment {
   /** x402 protocol version */
   x402Version: number;
 
-  /** Payment scheme used */
+  /** Payment scheme used (e.g., 'exact') */
   scheme: string;
 
-  /** Network where payment was made */
+  /** Network where payment was made (e.g., 'solana-devnet') */
   network: string;
 
-  /** Payment-specific payload */
+  /** Payment-specific payload (scheme and network dependent) */
   payload: PaymentPayload;
 }
 
 /**
- * Payment payload (scheme-specific)
- * For Solana: contains transaction signature
+ * Payment payload (scheme and network specific)
+ *
+ * For Solana 'exact' scheme:
+ * - Contains base64-encoded serialized transaction
+ * - Transaction must include SPL token transfer instruction
+ *
+ * For EVM chains:
+ * - Would contain different data structure
  */
 export interface PaymentPayload {
-  /** Solana transaction signature */
-  signature: string;
+  /** For Solana: base64-encoded serialized transaction */
+  serializedTransaction?: string;
 
-  /** Optional: additional metadata */
+  /** For backwards compatibility: transaction signature */
+  signature?: string;
+
+  /** Scheme-specific additional data */
   [key: string]: any;
 }
 
@@ -194,4 +211,87 @@ export enum X402ErrorCode {
 
   /** Internal verification error */
   VERIFICATION_ERROR = 'VERIFICATION_ERROR',
+}
+
+/**
+ * Facilitator API types
+ * Official x402 protocol facilitator endpoints
+ */
+
+/**
+ * Request body for POST /verify endpoint
+ * Validates payment without blockchain interaction
+ */
+export interface VerifyRequest {
+  /** x402 protocol version */
+  x402Version: number;
+
+  /** Payment header data (X-PAYMENT header contents) */
+  paymentHeader: X402Payment;
+
+  /** Payment requirements that were requested */
+  paymentRequirements: PaymentAccept;
+}
+
+/**
+ * Response from POST /verify endpoint
+ */
+export interface VerifyResponse {
+  /** Whether payment is valid */
+  isValid: boolean;
+
+  /** Reason why payment is invalid (if isValid is false) */
+  invalidReason: string | null;
+}
+
+/**
+ * Request body for POST /settle endpoint
+ * Executes payment on blockchain
+ */
+export interface SettleRequest {
+  /** x402 protocol version */
+  x402Version: number;
+
+  /** Payment header data (X-PAYMENT header contents) */
+  paymentHeader: X402Payment;
+
+  /** Payment requirements that were requested */
+  paymentRequirements: PaymentAccept;
+}
+
+/**
+ * Response from POST /settle endpoint
+ */
+export interface SettleResponse {
+  /** Whether settlement was successful */
+  success: boolean;
+
+  /** Error message if settlement failed */
+  error: string | null;
+
+  /** Transaction hash/signature if successful */
+  txHash: string | null;
+
+  /** Network identifier where transaction was executed */
+  networkId: string | null;
+}
+
+/**
+ * Supported scheme/network pair
+ */
+export interface SupportedPair {
+  /** Payment scheme (e.g., 'exact') */
+  scheme: string;
+
+  /** Network identifier (e.g., 'solana-devnet') */
+  network: string;
+}
+
+/**
+ * Response from GET /supported endpoint
+ * Lists all supported (scheme, network) combinations
+ */
+export interface SupportedResponse {
+  /** Array of supported scheme/network pairs */
+  supported: SupportedPair[];
 }

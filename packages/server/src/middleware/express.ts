@@ -1,11 +1,17 @@
 /**
  * Express middleware for x402 payment verification
- * Implements payment-required responses for Express framework
+ * Implements official x402 protocol for Express framework
+ *
+ * Compliant with: https://github.com/coinbase/x402
  */
 
 import { Request, Response, NextFunction } from 'express';
-import { TransactionVerifier, PaymentRequirementsGenerator } from '@x402-solana/core';
-import { X402Payment, PaymentReceipt } from '@x402-solana/core';
+import {
+  TransactionVerifier,
+  PaymentRequirementsGenerator,
+  parseX402Payment,
+} from '@x402-solana/core';
+import { PaymentReceipt } from '@x402-solana/core';
 import { SolanaNetwork } from '../config/network-config';
 
 /**
@@ -55,13 +61,20 @@ export interface X402MiddlewareConfig {
 
 /**
  * Per-route middleware options
+ * Compliant with x402 protocol specification
  */
 export interface MiddlewareOptions {
-  /** Resource identifier for payment requirements */
+  /** Resource identifier for payment requirements (e.g., '/api/endpoint') */
   resource?: string;
 
   /** Description of what payment is for */
   description?: string;
+
+  /** MIME type of the resource (default: 'application/json') */
+  mimeType?: string;
+
+  /** Optional JSON schema for response output */
+  outputSchema?: object | null;
 
   /** Error message override */
   errorMessage?: string;
@@ -71,6 +84,9 @@ export interface MiddlewareOptions {
 
   /** Timeout in seconds for payment to be valid */
   timeoutSeconds?: number;
+
+  /** Optional additional data (scheme-specific) */
+  extra?: object | null;
 }
 
 /**
@@ -172,22 +188,46 @@ export class X402Middleware {
           return this.send402(res, priceUSD, options);
         }
 
-        // 2. Decode payment header
-        const payment = this.decodePaymentHeader(paymentHeader as string);
+        // 2. Parse X-PAYMENT header using official x402 parser
+        const parseResult = parseX402Payment(paymentHeader as string);
 
-        if (this.config.debug) {
-          console.log('[x402] Decoded payment:', {
-            signature: payment.payload.signature,
-            network: payment.network,
+        if (!parseResult.success) {
+          // Invalid header format - return 402 with error
+          if (this.config.debug) {
+            console.log('[x402] Invalid X-PAYMENT header:', parseResult.error);
+          }
+          return this.send402(res, priceUSD, {
+            ...options,
+            errorMessage: parseResult.error || 'Invalid payment header',
           });
         }
 
-        // 3. Verify payment on Solana
+        const payment = parseResult.payment!;
+
+        if (this.config.debug) {
+          console.log('[x402] Parsed payment:', {
+            scheme: payment.scheme,
+            network: payment.network,
+            hasSignature: !!payment.payload.signature,
+            hasSerializedTx: !!payment.payload.serializedTransaction,
+          });
+        }
+
+        // 3. Generate payment requirements for verification
+        const paymentRequirements = this.generator.generate(priceUSD, {
+          resource: options?.resource,
+          description: options?.description,
+          timeoutSeconds: options?.timeoutSeconds,
+        });
+
+        // Extract first payment accept option for verification
+        const paymentAccept = paymentRequirements.accepts[0];
+
+        // 4. Verify payment using x402-compliant method
         const maxAge = options?.maxPaymentAgeMs || this.config.maxPaymentAgeMs || 300_000;
-        const result = await this.verifier.verifyPayment(
-          payment.payload.signature,
-          this.generator.getRecipientUSDCAccount(),
-          priceUSD,
+        const result = await this.verifier.verifyX402Payment(
+          paymentHeader as string,
+          paymentAccept,
           {
             maxAgeMs: maxAge,
             commitment: 'confirmed',
@@ -213,7 +253,7 @@ export class X402Middleware {
           });
         }
 
-        // 4. Payment verified - attach to request
+        // 5. Payment verified - attach to request
         req.payment = {
           signature: result.signature!,
           amount: (result.transfer?.amount || 0) / 1_000_000, // Convert to USD
@@ -222,7 +262,7 @@ export class X402Middleware {
           slot: result.slot,
         };
 
-        // 5. Add payment response header
+        // 6. Add payment response header
         const receipt: PaymentReceipt = {
           signature: result.signature!,
           network: `solana-${this.config.network}`,
@@ -235,7 +275,7 @@ export class X402Middleware {
 
         res.setHeader('X-PAYMENT-RESPONSE', this.encodePaymentResponse(receipt));
 
-        // 6. Continue to handler
+        // 7. Continue to handler
         next();
       } catch (error: any) {
         // Internal error during verification
@@ -252,6 +292,7 @@ export class X402Middleware {
 
   /**
    * Send 402 Payment Required response
+   * Returns x402-compliant payment requirements
    *
    * @param res - Express response
    * @param priceUSD - Price in USD
@@ -261,27 +302,14 @@ export class X402Middleware {
     const requirements = this.generator.generate(priceUSD, {
       resource: options?.resource,
       description: options?.description,
+      mimeType: options?.mimeType,
+      outputSchema: options?.outputSchema,
       errorMessage: options?.errorMessage,
       timeoutSeconds: options?.timeoutSeconds,
+      extra: options?.extra,
     });
 
     res.status(402).json(requirements);
-  }
-
-  /**
-   * Decode X-PAYMENT header
-   *
-   * @param header - Base64-encoded payment header
-   * @returns Decoded payment object
-   * @throws Error if header format is invalid
-   */
-  private decodePaymentHeader(header: string): X402Payment {
-    try {
-      const decoded = Buffer.from(header, 'base64').toString('utf-8');
-      return JSON.parse(decoded);
-    } catch (error) {
-      throw new Error('Invalid X-PAYMENT header format');
-    }
   }
 
   /**
@@ -324,6 +352,7 @@ export class X402Middleware {
  * Extend Express Request interface to include payment info
  */
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
       payment?: PaymentInfo;

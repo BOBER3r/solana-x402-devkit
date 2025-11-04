@@ -4,12 +4,15 @@ Server-side framework integrations for x402 payment verification on Solana.
 
 [![npm version](https://img.shields.io/npm/v/@x402-solana/server.svg)](https://www.npmjs.com/package/@x402-solana/server)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![x402](https://img.shields.io/badge/x402-v1%20Compliant-success)](https://github.com/coinbase/x402)
 
 ## Overview
 
-`@x402-solana/server` makes it trivial to add USDC micropayments to any HTTP API on Solana. Add one line of middleware and your endpoints instantly support x402 payment protocol.
+`@x402-solana/server` makes it trivial to add USDC micropayments to any HTTP API on Solana. Add one line of middleware and your endpoints instantly support the **official x402 payment protocol**.
 
 **Turn any endpoint into a paid API in under 5 lines of code.**
+
+> **🏆 x402 v1 Compliant**: Supports Express, NestJS, and Fastify with full x402 protocol compliance. See [X402_COMPLIANCE.md](../../X402_COMPLIANCE.md) for details.
 
 ## Installation
 

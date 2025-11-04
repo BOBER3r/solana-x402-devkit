@@ -76,7 +76,7 @@ describe('Fastify Plugin', () => {
     };
 
     (TransactionVerifier as jest.Mock).mockImplementation(() => mockVerifier);
-    (PaymentRequirementsGenerator as jest.Mock).mockImplementation(() => mockGenerator);
+    (PaymentRequirementsGenerator as unknown as jest.Mock).mockImplementation(() => mockGenerator);
 
     // Create Fastify app
     app = Fastify();

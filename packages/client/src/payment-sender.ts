@@ -263,7 +263,7 @@ export class PaymentSender {
     usdcMint: string
   ): Promise<PaymentCostEstimate> {
     const mintPubkey = new PublicKey(usdcMint);
-    const amountMicroUSDC = Math.floor(amountUSDC * 1_000_000);
+    const _amountMicroUSDC = Math.floor(amountUSDC * 1_000_000);
 
     // Get USDC balance
     const senderTokenAccount = getAssociatedTokenAddressSync(

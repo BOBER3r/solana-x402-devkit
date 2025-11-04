@@ -80,10 +80,17 @@ export function isValidPaymentHeader(header: string): boolean {
  *
  * @param header - X-PAYMENT header value
  * @returns Transaction signature
- * @throws Error if header is invalid
+ * @throws Error if header is invalid or signature is missing
  */
 export function extractSignature(header: string): string {
   const payment = decodePaymentHeader(header);
+
+  // decodePaymentHeader validates that signature exists (line 50-52)
+  // If we reach here, signature must be defined
+  if (!payment.payload.signature) {
+    throw new Error('Missing signature in payment payload');
+  }
+
   return payment.payload.signature;
 }
 

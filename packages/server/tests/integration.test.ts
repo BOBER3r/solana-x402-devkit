@@ -79,7 +79,7 @@ describe('Integration Tests', () => {
     };
 
     (TransactionVerifier as jest.Mock).mockImplementation(() => mockVerifier);
-    (PaymentRequirementsGenerator as jest.Mock).mockImplementation(() => mockGenerator);
+    (PaymentRequirementsGenerator as unknown as jest.Mock).mockImplementation(() => mockGenerator);
   });
 
   afterEach(() => {
