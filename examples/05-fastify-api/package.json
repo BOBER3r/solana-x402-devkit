@@ -1,0 +1,32 @@
+{
+  "name": "x402-fastify-example",
+  "version": "1.0.0",
+  "description": "Fastify example for x402 micropayments on Solana",
+  "main": "dist/server.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "tsx server.ts",
+    "server": "tsx server.ts",
+    "client": "tsx client.ts",
+    "demo": "concurrently \"npm run server\" \"sleep 5 && npm run client\""
+  },
+  "keywords": ["x402", "solana", "fastify", "payment", "micropayment"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "fastify": "^4.24.3",
+    "@x402-solana/server": "^0.2.0",
+    "@x402-solana/client": "^0.2.0",
+    "@x402-solana/core": "^0.2.0",
+    "@solana/web3.js": "^1.87.6",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "concurrently": "^8.2.2",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.2"
+  }
+}

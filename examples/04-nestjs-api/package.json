@@ -1,0 +1,35 @@
+{
+  "name": "x402-nestjs-example",
+  "version": "1.0.0",
+  "description": "NestJS example for x402 micropayments on Solana",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/src/main.js",
+    "dev": "ts-node src/main.ts",
+    "server": "ts-node src/main.ts",
+    "client": "ts-node client.ts",
+    "demo": "concurrently \"npm run server\" \"sleep 5 && npm run client\""
+  },
+  "keywords": ["x402", "solana", "nestjs", "payment", "micropayment"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@nestjs/common": "^10.2.10",
+    "@nestjs/core": "^10.2.10",
+    "@nestjs/platform-express": "^10.2.10",
+    "@x402-solana/server": "^0.2.0",
+    "@x402-solana/client": "^0.2.0",
+    "@x402-solana/core": "^0.2.0",
+    "@solana/web3.js": "^1.87.6",
+    "dotenv": "^16.3.1",
+    "reflect-metadata": "^0.1.13",
+    "rxjs": "^7.8.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "concurrently": "^8.2.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.2"
+  }
+}
