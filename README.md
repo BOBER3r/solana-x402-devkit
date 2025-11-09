@@ -21,8 +21,11 @@ npm install @x402-solana/server @solana/web3.js
 # Install client package (for API consumers)
 npm install @x402-solana/client @solana/web3.js
 
-# Or install both
-npm install @x402-solana/server @x402-solana/client @solana/web3.js
+# Install React hooks (for React apps)
+npm install @x402-solana/react @solana/wallet-adapter-react
+
+# Or install all packages
+npm install @x402-solana/server @x402-solana/client @x402-solana/react
 ```
 
 ---
@@ -83,6 +86,50 @@ const data = await response.json();
 3. Waits for transaction confirmation
 4. Retries request with payment proof
 
+### React (Drop-in hooks for React apps) 🆕
+
+```tsx
+import { X402Provider, useX402Payment } from '@x402-solana/react';
+import { WalletProvider } from '@solana/wallet-adapter-react';
+
+// 1. Wrap your app with providers
+function App() {
+  return (
+    <WalletProvider wallets={[]} autoConnect>
+      <X402Provider config={{ solanaRpcUrl: 'https://api.devnet.solana.com' }}>
+        <YourApp />
+      </X402Provider>
+    </WalletProvider>
+  );
+}
+
+// 2. Use the hook - that's it!
+function PremiumContent() {
+  const { fetch, isLoading } = useX402Payment();
+
+  const loadData = async () => {
+    const response = await fetch('/api/premium'); // Auto-handles 402!
+    const data = await response.json();
+  };
+
+  return (
+    <button onClick={loadData} disabled={isLoading}>
+      {isLoading ? 'Processing...' : 'Load Premium Data'}
+    </button>
+  );
+}
+```
+
+**Built for React developers:**
+- ✅ Works with Phantom, Solflare, and all Solana wallets
+- ✅ Automatic 402 detection and payment
+- ✅ Balance monitoring with `useWalletBalance()`
+- ✅ Payment history tracking with `usePaymentHistory()`
+- ✅ Full TypeScript support
+- ✅ Zero configuration needed
+
+👉 **[Complete React Guide](./REACT_INTEGRATION_GUIDE.md)**
+
 ---
 
 ## 📦 Packages
@@ -92,6 +139,7 @@ const data = await response.json();
 | **[@x402-solana/core](https://www.npmjs.com/package/@x402-solana/core)** | Core payment verification and x402 protocol | ✅ Published (96 tests) |
 | **[@x402-solana/server](https://www.npmjs.com/package/@x402-solana/server)** | Express, NestJS, Fastify middleware | ✅ Published |
 | **[@x402-solana/client](https://www.npmjs.com/package/@x402-solana/client)** | Auto-payment fetch wrapper | ✅ Published |
+| **[@x402-solana/react](./packages/react)** | React hooks and components 🆕 | ✅ Ready (v0.2.0) |
 
 ---
 
