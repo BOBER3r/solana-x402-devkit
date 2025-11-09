@@ -250,12 +250,15 @@ Primary CTA for paid actions with built-in payment handling.
 import { PaymentButton } from '@x402-solana/react';
 
 <PaymentButton
+  endpoint="https://api.example.com/premium"  // API endpoint to call
   priceUSD={0.001}
   description="Get BTC price data"
+  method="GET"       // 'GET' | 'POST' | 'PUT' | 'DELETE'
   onSuccess={(data) => console.log('Payment successful!', data)}
   onError={(error) => console.error('Payment failed:', error)}
-  variant="primary"  // 'primary' | 'secondary' | 'outline'
+  variant="primary"  // 'primary' | 'secondary' | 'outline' | 'ghost'
   size="md"          // 'sm' | 'md' | 'lg'
+  showPrice={true}   // Show price badge on button
 >
   Get Premium Data
 </PaymentButton>
@@ -263,9 +266,11 @@ import { PaymentButton } from '@x402-solana/react';
 
 **Features:**
 - Auto-detects wallet connection
+- Automatically calls endpoint after payment
 - Loading states with spinner
 - Success/error animations
 - Customizable variants and sizes
+- Optional price badge display
 
 ### BalanceBadge
 
