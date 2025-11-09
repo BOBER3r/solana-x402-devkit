@@ -1,0 +1,29 @@
+# Source files
+src/
+tests/
+examples/
+
+# Build config
+tsconfig.json
+jest.config.js
+
+# Documentation (keep README.md)
+*.md
+!README.md
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+
+# Test coverage
+coverage/
+
+# Logs
+*.log
+
+# OS
+.DS_Store

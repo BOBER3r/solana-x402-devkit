@@ -1,0 +1,28 @@
+# Source files
+src/
+tests/
+
+# Configuration
+tsconfig.json
+jest.config.js
+.eslintrc.json
+
+# Git
+.git/
+.gitignore
+
+# CI/CD
+.github/
+
+# Docs (keep README.md)
+docs/
+
+# Test coverage
+coverage/
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
