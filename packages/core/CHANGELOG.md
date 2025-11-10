@@ -5,11 +5,36 @@ All notable changes to `@x402-solana/core` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.3.0] - 2025-11-10
+## [0.3.2] - 2025-01-10
+
+### Added
+- **Implemented `fetchChannelState()`** - Now fully functional for standard payment channel programs
+- Supports 170-byte Anchor account layout with proper deserialization
+- Reads all required fields: client, server, deposits, nonce, status, credit limit, expiry
+
+### Fixed
+- Channel payment verification now works end-to-end (no more "not implemented" error)
+- Properly handles signed i64 expiry field
+- Validates account size before deserialization
+
+---
+
+## [0.3.1] - 2025-01-10
+
+### Fixed
+- **CRITICAL:** Added missing `tweetnacl` dependency to package.json
+- v0.3.0 was broken due to missing dependency - this version fixes it
+
+### Note
+- ⚠️ Do not use v0.3.0 - use v0.3.1+ instead
+
+---
+
+## [0.3.0] - 2025-01-10 [YANKED - Use 0.3.1]
 
 ### Added
 
-####  Payment Channels Support
+#### 🎉 Payment Channels Support
 - **NEW: `scheme: 'channel'`** - Off-chain payment channel verification
 - **ChannelPaymentVerifier** - Complete channel payment verification with 13 security checks
 - **ChannelPayload** type for channel payment structure

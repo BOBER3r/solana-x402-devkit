@@ -443,8 +443,24 @@ export class ChannelPaymentVerifier {
   /**
    * Fetch channel state from Solana blockchain
    *
-   * IMPORTANT: This method must be implemented based on your channel program's
-   * account structure. The example below shows the expected interface.
+   * Deserializes payment channel account data based on the standard
+   * payment channel program structure:
+   *
+   * Account Layout (170 bytes total):
+   * - Discriminator: 8 bytes (Anchor)
+   * - channel_id: [u8; 32] (32 bytes)
+   * - client: Pubkey (32 bytes)
+   * - server: Pubkey (32 bytes)
+   * - client_deposit: u64 (8 bytes)
+   * - server_claimed: u64 (8 bytes)
+   * - nonce: u64 (8 bytes)
+   * - expiry: i64 (8 bytes, signed)
+   * - status: enum (1 byte: 0=Open, 1=Closed, 2=Disputed)
+   * - created_at: i64 (8 bytes)
+   * - last_update: i64 (8 bytes)
+   * - debt_owed: u64 (8 bytes)
+   * - credit_limit: u64 (8 bytes)
+   * - bump: u8 (1 byte)
    *
    * @param channelId - Channel PDA address
    * @returns Channel state or null if not found
@@ -457,35 +473,76 @@ export class ChannelPaymentVerifier {
         return null;
       }
 
-      // TODO: Deserialize account data based on your channel program's structure
-      // This is a placeholder - you need to implement actual deserialization
-      // using @coral-xyz/borsh or your program's IDL
+      const data = accountInfo.data;
 
-      // Example structure (adjust based on your program):
-      // const data = accountInfo.data;
-      // const client = new PublicKey(data.slice(0, 32));
-      // const server = new PublicKey(data.slice(32, 64));
-      // const clientDeposit = data.readBigUInt64LE(64);
-      // const serverClaimed = data.readBigUInt64LE(72);
-      // const nonce = data.readBigUInt64LE(80);
-      // const status = data.readUInt8(88); // 0 = Open, 1 = Closed, 2 = Disputed
-      // ...
+      // Verify minimum account size (8-byte discriminator + account data)
+      if (data.length < 170) {
+        throw new Error(`Invalid account data size: ${data.length} bytes (expected 170)`);
+      }
 
-      throw new Error(
-        'fetchChannelState not implemented. Please implement based on your channel program structure.'
-      );
+      let offset = 8; // Skip 8-byte Anchor discriminator
 
-      // Return example (uncomment and modify after implementing deserialization):
-      // return {
-      //   address: channelId,
-      //   client,
-      //   server,
-      //   clientDeposit,
-      //   serverClaimed,
-      //   creditLimit: 0n,
-      //   nonce,
-      //   status: status === 0 ? 'Open' : status === 1 ? 'Closed' : 'Disputed',
-      // };
+      // channel_id: [u8; 32] - skip, not needed for verification
+      offset += 32;
+
+      // client: Pubkey (32 bytes)
+      const client = new PublicKey(data.slice(offset, offset + 32));
+      offset += 32;
+
+      // server: Pubkey (32 bytes)
+      const server = new PublicKey(data.slice(offset, offset + 32));
+      offset += 32;
+
+      // client_deposit: u64 (8 bytes, little-endian)
+      const clientDeposit = data.readBigUInt64LE(offset);
+      offset += 8;
+
+      // server_claimed: u64 (8 bytes, little-endian)
+      const serverClaimed = data.readBigUInt64LE(offset);
+      offset += 8;
+
+      // nonce: u64 (8 bytes, little-endian)
+      const nonce = data.readBigUInt64LE(offset);
+      offset += 8;
+
+      // expiry: i64 (8 bytes, little-endian, SIGNED)
+      const expiry = data.readBigInt64LE(offset);
+      offset += 8;
+
+      // status: enum (1 byte: 0=Open, 1=Closed, 2=Disputed)
+      const statusByte = data.readUInt8(offset);
+      offset += 1;
+
+      const status: 'Open' | 'Closed' | 'Disputed' =
+        statusByte === 0 ? 'Open' :
+        statusByte === 1 ? 'Closed' : 'Disputed';
+
+      // created_at: i64 (8 bytes) - skip, not needed for verification
+      offset += 8;
+
+      // last_update: i64 (8 bytes) - skip, not needed for verification
+      offset += 8;
+
+      // debt_owed: u64 (8 bytes) - skip, not needed for verification
+      offset += 8;
+
+      // credit_limit: u64 (8 bytes)
+      const creditLimit = data.readBigUInt64LE(offset);
+      offset += 8;
+
+      // bump: u8 (1 byte) - skip, not needed for verification
+
+      return {
+        address: channelId,
+        client,
+        server,
+        clientDeposit,
+        serverClaimed,
+        creditLimit,
+        nonce,
+        status,
+        channelExpiry: expiry,
+      };
     } catch (error) {
       console.error('Error fetching channel state:', error);
       return null;
