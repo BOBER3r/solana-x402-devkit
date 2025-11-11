@@ -86,13 +86,7 @@
 - Comprehensive JSDoc comments
 - Usage examples for common scenarios
 
-### 4. Production Ready
-- Transaction simulation before sending
-- Balance checks to prevent failures
-- Confirmation waiting before retry
-- Network compatibility validation
-
-### 5. Flexible Architecture
+### 4. Flexible Architecture
 - Auto-retry can be disabled for manual control
 - Low-level PaymentSender for custom logic
 - WalletManager for testing/development

@@ -145,11 +145,6 @@ function PremiumContent() {
 
 ## 🎯 Features
 
-### ✅ Production Ready
-- Full TypeScript with strict mode
-- Transaction replay protection
-- Exponential backoff retry logic
-- Redis caching support
 
 ### ✅ Framework Agnostic
 - **Express** middleware
